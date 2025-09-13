@@ -5,6 +5,7 @@
 4. npm install drizzle-orm mysql2
 5. npm install -D drizzle-kit
 6. npm install zod
+7. npm install react-hook-form @hookform/resolvers
 
 
 id

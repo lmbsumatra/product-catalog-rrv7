@@ -16,7 +16,7 @@ export const ProductSchema = z.object({
 export const UpdateProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  price: z.number().positive("Price must be positive"),
+  price: z.number("Price must be number").positive("Price must be positive"),
   category: z.string().min(1, "Category is required"),
   imageUrl: z.string().optional(), 
 });

@@ -27,7 +27,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const data: Record<string, any> = {};
 
   formData.forEach((value, key) => {
-    if (key !== "image") {
+    if (key !== "image" && key !== "intent") {
       data[key] = value;
     }
   });
@@ -39,17 +39,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const validationResult = UpdateProductSchema.safeParse(data);
   
   if (!validationResult.success) {
-    const fieldErrors: Record<string, string> = {};
-    validationResult.error.issues.forEach((err: any) => {
-      if (err.path[0]) {
-        fieldErrors[err.path[0] as string] = err.message;
-      }
-    });
-    
+    console.error("Server-side validation failed:", validationResult.error.issues);
     return { 
-      error: "Validation failed", 
-      fieldErrors,
-      values: data
+      error: "Validation failed on server", 
     };
   }
 
@@ -72,8 +64,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     } catch (error) {
       console.error("Error saving image:", error);
       return { 
-        error: "Failed to save image",
-        values: data
+        error: "Failed to save image"
       };
     }
   }
@@ -84,8 +75,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   } catch (error) {
     console.error("Error updating product:", error);
     return { 
-      error: "Failed to update product",
-      values: data
+      error: "Failed to update product"
     };
   }
 }
@@ -113,8 +103,6 @@ export default function Edit({
   loaderData: LoaderData;
   actionData?: {
     error?: string;
-    fieldErrors?: Record<string, string>;
-    values?: Record<string, any>;
   };
   params: { slug: string };
 }) {
@@ -137,11 +125,7 @@ export default function Edit({
             <span>{actionData.error}</span>
           </div>
         )}
-        <EditProductForm 
-          product={item} 
-          fieldErrors={actionData?.fieldErrors}
-          submittedValues={actionData?.values}
-        />
+        <EditProductForm product={item} />
       </div>
     </div>
   );
