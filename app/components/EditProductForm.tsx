@@ -4,13 +4,21 @@ import type { Product } from "~/db/schemas";
 
 type ProductDetailsI = {
   product: Product;
+  fieldErrors?: Record<string, string>;
+  submittedValues?: Record<string, any>;
 };
 
-export default function EditProductForm({ product }: ProductDetailsI) {
+export default function EditProductForm({ 
+  product, 
+  fieldErrors = {},
+  submittedValues 
+}: ProductDetailsI) {
   const [preview, setPreview] = useState<string | null>(
     product.imageUrl || null
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const defaultValues = submittedValues || product;
 
   useEffect(() => {
     setPreview(product.imageUrl || null);
@@ -104,11 +112,16 @@ export default function EditProductForm({ product }: ProductDetailsI) {
             <input
               type="text"
               name="name"
-              defaultValue={product.name}
-              className="input input-bordered w-full"
+              defaultValue={defaultValues.name || ""}
+              className={`input input-bordered w-full ${fieldErrors.name ? 'input-error' : ''}`}
               placeholder="Dell 7480"
-              required
+              
             />
+            {fieldErrors.name && (
+              <div className="label">
+                <span className="label-text-alt text-error">{fieldErrors.name}</span>
+              </div>
+            )}
           </div>
 
           <div>
@@ -117,10 +130,15 @@ export default function EditProductForm({ product }: ProductDetailsI) {
             </label>
             <textarea
               name="description"
-              defaultValue={product.description || ""}
-              className="textarea textarea-bordered w-full h-24"
+              defaultValue={defaultValues.description || ""}
+              className={`textarea textarea-bordered w-full h-24 ${fieldErrors.description ? 'textarea-error' : ''}`}
               placeholder="Black, 8gb RAM, 256 Storage"
             />
+            {fieldErrors.description && (
+              <div className="label">
+                <span className="label-text-alt text-error">{fieldErrors.description}</span>
+              </div>
+            )}
           </div>
 
           <div>
@@ -130,13 +148,18 @@ export default function EditProductForm({ product }: ProductDetailsI) {
             <input
               type="number"
               name="price"
-              defaultValue={product.price?.toString() || ""}
-              className="input input-bordered w-full"
+              defaultValue={defaultValues.price?.toString() || ""}
+              className={`input input-bordered w-full ${fieldErrors.price ? 'input-error' : ''}`}
               placeholder="25000"
               step="0.01"
               min="0"
-              required
+              
             />
+            {fieldErrors.price && (
+              <div className="label">
+                <span className="label-text-alt text-error">{fieldErrors.price}</span>
+              </div>
+            )}
           </div>
 
           <div>
@@ -145,9 +168,9 @@ export default function EditProductForm({ product }: ProductDetailsI) {
             </label>
             <select
               name="category"
-              defaultValue={product.category || ""}
-              className="select select-bordered w-full"
-              required
+              defaultValue={defaultValues.category || ""}
+              className={`select select-bordered w-full ${fieldErrors.category ? 'select-error' : ''}`}
+              
             >
               <option disabled value="">
                 Select Category
@@ -159,6 +182,11 @@ export default function EditProductForm({ product }: ProductDetailsI) {
               <option value="sports">Sports</option>
               <option value="other">Other</option>
             </select>
+            {fieldErrors.category && (
+              <div className="label">
+                <span className="label-text-alt text-error">{fieldErrors.category}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4 justify-end pt-4">

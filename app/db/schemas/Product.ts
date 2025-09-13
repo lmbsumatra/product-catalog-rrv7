@@ -13,4 +13,13 @@ export const ProductSchema = z.object({
   updatedAt: z.string().optional(),
 });
 
+export const UpdateProductSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  price: z.number().positive("Price must be positive"),
+  category: z.string().min(1, "Category is required"),
+  imageUrl: z.string().optional(), 
+});
+
+export type UpdateProduct = z.infer<typeof UpdateProductSchema>;
 export type Product = z.infer<typeof ProductSchema>;

@@ -6,6 +6,7 @@ import UpdateProduct from "~/services/products/updateProduct";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import crypto from "crypto";
+import { UpdateProductSchema } from "~/db/schemas"; 
 
 type LoaderData = {
   item: Awaited<ReturnType<typeof GetProduct>>;
@@ -19,8 +20,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const { slug } = params;
   if (!slug) {
     console.log("Item not found");
-    return;
+    return { error: "Product not found" };
   }
+
   const formData = await request.formData();
   const data: Record<string, any> = {};
 
@@ -32,6 +34,23 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   if (data.price) {
     data.price = Number(data.price);
+  }
+
+  const validationResult = UpdateProductSchema.safeParse(data);
+  
+  if (!validationResult.success) {
+    const fieldErrors: Record<string, string> = {};
+    validationResult.error.issues.forEach((err: any) => {
+      if (err.path[0]) {
+        fieldErrors[err.path[0] as string] = err.message;
+      }
+    });
+    
+    return { 
+      error: "Validation failed", 
+      fieldErrors,
+      values: data
+    };
   }
 
   const imageFile = formData.get("image") as File;
@@ -49,21 +68,26 @@ export async function action({ request, params }: ActionFunctionArgs) {
       const buffer = Buffer.from(arrayBuffer);
       await writeFile(filePath, buffer);
 
-      data.imageUrl = `/assets/${fileName}`;
+      validationResult.data.imageUrl = `/assets/${fileName}`;
     } catch (error) {
       console.error("Error saving image:", error);
-      return { error: "Failed to save image" };
+      return { 
+        error: "Failed to save image",
+        values: data
+      };
     }
   }
 
   try {
-    await UpdateProduct({ slug, data });
+    await UpdateProduct({ slug, data: validationResult.data });
     return redirect(`/products/${slug}`);
   } catch (error) {
     console.error("Error updating product:", error);
-    return { error: "Failed to update product" };
+    return { 
+      error: "Failed to update product",
+      values: data
+    };
   }
-  return;
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -83,9 +107,15 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 export default function Edit({
   loaderData,
+  actionData,
   params,
 }: {
   loaderData: LoaderData;
+  actionData?: {
+    error?: string;
+    fieldErrors?: Record<string, string>;
+    values?: Record<string, any>;
+  };
   params: { slug: string };
 }) {
   const item = loaderData?.item;
@@ -102,7 +132,16 @@ export default function Edit({
             Update your product information
           </p>
         </div>
-        <EditProductForm product={item} />
+        {actionData?.error && (
+          <div className="alert alert-error mb-4 max-w-2xl mx-auto">
+            <span>{actionData.error}</span>
+          </div>
+        )}
+        <EditProductForm 
+          product={item} 
+          fieldErrors={actionData?.fieldErrors}
+          submittedValues={actionData?.values}
+        />
       </div>
     </div>
   );
