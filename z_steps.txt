@@ -1,0 +1,24 @@
+1. npx create-react-router@latest ./
+2. npm install daisyui@latest
+------> add on app.css: @plugin "daisyui";
+3. <li><button onClick={() => document.documentElement.setAttribute('data-theme', 'light')}>🌞 Light</button></li>
+4. npm install drizzle-orm mysql2
+5. npm install -D drizzle-kit
+6. npm install zod
+
+
+id
+name
+slug
+description
+price
+imageUrl
+category
+createdAt
+updatedAt
+ownerId
+
+
+id
+username
+password
