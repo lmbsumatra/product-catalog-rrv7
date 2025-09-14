@@ -1,13 +1,71 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { AddProduct } from "~/db/schemas";
+import { AddProductSchema } from "~/db/schemas";
 
 export default function AddProductForm() {
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<AddProduct>({
+    resolver: zodResolver(AddProductSchema),
+    defaultValues: {
+      category: "",
+    },
+    mode: "onChange",
+  });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setPreview(URL.createObjectURL(file));
+      setSelectedFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setPreview(previewUrl);
+
+      setValue("imageUrl", previewUrl, { shouldValidate: true });
+
+      return () => {
+        URL.revokeObjectURL(previewUrl);
+      };
     }
+  };
+
+  const onSubmit = async (data: AddProduct) => {
+    const formData = new FormData();
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value.toString());
+      }
+    });
+
+    if (selectedFile) {
+      formData.append("image", selectedFile);
+    }
+
+    formData.append("intent", "update");
+
+    const form = document.createElement("form");
+    form.method = "post";
+    form.encType = "multipart/form-data";
+
+    for (const [key, value] of formData.entries()) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = value as string;
+      form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
   };
 
   return (
@@ -15,25 +73,51 @@ export default function AddProductForm() {
       <fieldset className="fieldset w-full md:w-1/2 flex flex-col items-center justify-center">
         <legend className="fieldset-legend">Image</legend>
 
+        {errors.imageUrl && (
+          <div className="label">
+            <span className="label-text-alt text-error">
+              {errors.imageUrl.message}
+            </span>
+          </div>
+        )}
+
         <label
           htmlFor="product-image"
-          className="relative group w-full min-h-50 h-full border border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-base-200"
+          className="relative group w-full min-h-50 h-full border border-dashed border-base-300 rounded flex items-center justify-center cursor-pointer hover:bg-base-200 transition-colors"
         >
           {preview ? (
             <>
-              <span className="absolute z-9 flex group-hover:visible group-hover:bg-neutral-900/50 h-full w-full invisible text-sm text-white items-center justify-center">
+              <span className="absolute z-10 flex group-hover:visible group-hover:bg-black/50 h-full w-full invisible text-sm text-white items-center justify-center rounded transition-all">
                 Click to change
               </span>
               <img
                 src={preview}
                 alt="Preview"
-                className="w-full h-full object-cover rounded"
+                className="w-full h-full object-cover rounded max-h-64"
               />
             </>
           ) : (
-            <span className="text-sm text-gray-500">Click to add</span>
+            <div className="text-center p-8">
+              <svg
+                className="w-12 h-12 mx-auto mb-2 text-base-content/50"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <span className="text-sm text-base-content/70">
+                Click to add image
+              </span>
+            </div>
           )}
         </label>
+
         <input
           id="product-image"
           type="file"
@@ -41,45 +125,124 @@ export default function AddProductForm() {
           accept="image/*"
           onChange={handleImageChange}
         />
+
+        {selectedFile && (
+          <p className="text-xs text-base-content/70 mt-2 text-center">
+            Selected: {selectedFile.name}
+          </p>
+        )}
       </fieldset>
 
-      <fieldset className="fieldset w-full md:w-2/3 space-y-3">
-        <legend className="fieldset-legend">Name *</legend>
-        <input
-          type="text"
-          className="input input-bordered w-full"
-          placeholder="Dell 7480"
-        />
-
-        <legend className="fieldset-legend">Description</legend>
-        <textarea
-          className="textarea textarea-bordered w-full"
-          placeholder="Black, 8gb RAM, 256 Storage"
-        />
-
-        <legend className="fieldset-legend">Price *</legend>
-        <input
-          type="text"
-          className="input input-bordered w-full"
-          placeholder="25000"
-        />
-
-        <legend className="fieldset-legend">Category *</legend>
-        <select
-          defaultValue="Pick a color"
-          className="select select-bordered w-full"
-        >
-          <option disabled={true}>Select Category</option>
-          <option>Technology</option>
-          <option>Clothing</option>
-          <option>Food</option>
-        </select>
-
-        <div className="flex gap-4 justify-end">
-          <button className="btn btn-outline btn-error">Cancel</button>
-          <button className="btn btn-soft btn-accent">Add Product</button>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="fieldset w-full md:w-2/3 space-y-4"
+      >
+        <div>
+          <label className="label">
+            <span className="label-text">Name *</span>
+          </label>
+          <input
+            type="text"
+            {...register("name")}
+            className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
+            placeholder="Dell 7480"
+          />
+          {errors.name && (
+            <div className="label">
+              <span className="label-text-alt text-error">
+                {errors.name.message}
+              </span>
+            </div>
+          )}
         </div>
-      </fieldset>
+
+        <div>
+          <label className="label">
+            <span className="label-text">Description</span>
+          </label>
+          <textarea
+            {...register("description")}
+            className={`textarea textarea-bordered w-full h-24 ${errors.description ? "textarea-error" : ""}`}
+            placeholder="Black, 8gb RAM, 256 Storage"
+          />
+          {errors.description && (
+            <div className="label">
+              <span className="label-text-alt text-error">
+                {errors.description.message}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="label">
+            <span className="label-text">Price *</span>
+          </label>
+          <input
+            type="number"
+            {...register("price", { valueAsNumber: true })}
+            className={`input input-bordered w-full ${errors.price ? "input-error" : ""}`}
+            placeholder="25000"
+            step="0.01"
+            min="0"
+          />
+          {errors.price && (
+            <div className="label">
+              <span className="label-text-alt text-error">
+                {errors.price.message}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="label">
+            <span className="label-text">Category *</span>
+          </label>
+          <select
+            {...register("category")}
+            className={`select select-bordered w-full ${errors.category ? "select-error" : ""}`}
+          >
+            <option disabled value="">
+              Select Category
+            </option>
+            <option value="electronics">Electronics</option>
+            <option value="clothing">Clothing</option>
+            <option value="books">Books</option>
+            <option value="home">Home & Garden</option>
+            <option value="sports">Sports</option>
+            <option value="other">Other</option>
+          </select>
+          {errors.category && (
+            <div className="label">
+              <span className="label-text-alt text-error">
+                {errors.category.message}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-4 justify-end pt-4">
+          <button
+            type="button"
+            className="btn btn-outline btn-error"
+            onClick={() => reset()}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="btn btn-accent"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className="loading loading-spinner loading-sm"></span>
+            ) : (
+              "Add Product"
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

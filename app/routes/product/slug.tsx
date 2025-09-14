@@ -23,12 +23,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
 export async function loader({ params }: Route.LoaderArgs) {
   const { slug } = params;
   if (!slug) {
-    console.log("Item not found");
   }
 
   const data = await GetProduct({ slug });
   if (!data) {
-    console.log("Item not found");
     return;
   }
   return { item: data };

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "react-router";
 import type { Product } from "~/db/schemas";
 import { UpdateProductSchema, type UpdateProduct } from "~/db/schemas";
 
@@ -20,17 +19,16 @@ export default function EditProductForm({ product }: ProductDetailsI) {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    setValue,
-    watch
   } = useForm<UpdateProduct>({
     resolver: zodResolver(UpdateProductSchema),
     defaultValues: {
       name: product.name || "",
       description: product.description || "",
-      price: product.price || 0,
+      price: product.price ?? undefined,
       category: product.category || "",
+      imageUrl: product.imageUrl || "",
     },
-    mode: "onChange"
+    mode: "onChange",
   });
 
   useEffect(() => {
@@ -49,7 +47,7 @@ export default function EditProductForm({ product }: ProductDetailsI) {
       setSelectedFile(file);
       const previewUrl = URL.createObjectURL(file);
       setPreview(previewUrl);
-      
+
       return () => {
         URL.revokeObjectURL(previewUrl);
       };
@@ -59,16 +57,18 @@ export default function EditProductForm({ product }: ProductDetailsI) {
   const handleReset = () => {
     setPreview(product.imageUrl || null);
     setSelectedFile(null);
-    const fileInput = document.getElementById('product-image') as HTMLInputElement;
+    const fileInput = document.getElementById(
+      "product-image"
+    ) as HTMLInputElement;
     if (fileInput) {
-      fileInput.value = '';
+      fileInput.value = "";
     }
-    reset(); 
+    reset();
   };
 
   const onSubmit = async (data: UpdateProduct) => {
     const formData = new FormData();
-    
+
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         formData.append(key, value.toString());
@@ -76,18 +76,18 @@ export default function EditProductForm({ product }: ProductDetailsI) {
     });
 
     if (selectedFile) {
-      formData.append('image', selectedFile);
+      formData.append("image", selectedFile);
     }
 
-    formData.append('intent', 'update');
+    formData.append("intent", "update");
 
-    const form = document.createElement('form');
-    form.method = 'post';
-    form.encType = 'multipart/form-data';
-    
+    const form = document.createElement("form");
+    form.method = "post";
+    form.encType = "multipart/form-data";
+
     for (const [key, value] of formData.entries()) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
+      const input = document.createElement("input");
+      input.type = "hidden";
       input.name = key;
       input.value = value as string;
       form.appendChild(input);
@@ -99,7 +99,6 @@ export default function EditProductForm({ product }: ProductDetailsI) {
 
   return (
     <div className="p-5 shadow-md rounded w-full max-w-2xl mx-auto flex flex-col md:flex-row gap-6 justify-center items-stretch">
-      
       <fieldset className="fieldset w-full md:w-1/2 flex flex-col items-center justify-center">
         <legend className="fieldset-legend">Image</legend>
 
@@ -133,11 +132,13 @@ export default function EditProductForm({ product }: ProductDetailsI) {
                   d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                 />
               </svg>
-              <span className="text-sm text-base-content/70">Click to add image</span>
+              <span className="text-sm text-base-content/70">
+                Click to add image
+              </span>
             </div>
           )}
         </label>
-        
+
         <input
           id="product-image"
           type="file"
@@ -145,7 +146,7 @@ export default function EditProductForm({ product }: ProductDetailsI) {
           accept="image/*"
           onChange={handleImageChange}
         />
-        
+
         {selectedFile && (
           <p className="text-xs text-base-content/70 mt-2 text-center">
             Selected: {selectedFile.name}
@@ -153,7 +154,10 @@ export default function EditProductForm({ product }: ProductDetailsI) {
         )}
       </fieldset>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="fieldset w-full md:w-2/3 space-y-4">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="fieldset w-full md:w-2/3 space-y-4"
+      >
         <div>
           <label className="label">
             <span className="label-text">Name *</span>
@@ -161,12 +165,14 @@ export default function EditProductForm({ product }: ProductDetailsI) {
           <input
             type="text"
             {...register("name")}
-            className={`input input-bordered w-full ${errors.name ? 'input-error' : ''}`}
+            className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
             placeholder="Dell 7480"
           />
           {errors.name && (
             <div className="label">
-              <span className="label-text-alt text-error">{errors.name.message}</span>
+              <span className="label-text-alt text-error">
+                {errors.name.message}
+              </span>
             </div>
           )}
         </div>
@@ -177,12 +183,14 @@ export default function EditProductForm({ product }: ProductDetailsI) {
           </label>
           <textarea
             {...register("description")}
-            className={`textarea textarea-bordered w-full h-24 ${errors.description ? 'textarea-error' : ''}`}
+            className={`textarea textarea-bordered w-full h-24 ${errors.description ? "textarea-error" : ""}`}
             placeholder="Black, 8gb RAM, 256 Storage"
           />
           {errors.description && (
             <div className="label">
-              <span className="label-text-alt text-error">{errors.description.message}</span>
+              <span className="label-text-alt text-error">
+                {errors.description.message}
+              </span>
             </div>
           )}
         </div>
@@ -194,14 +202,16 @@ export default function EditProductForm({ product }: ProductDetailsI) {
           <input
             type="number"
             {...register("price", { valueAsNumber: true })}
-            className={`input input-bordered w-full ${errors.price ? 'input-error' : ''}`}
+            className={`input input-bordered w-full ${errors.price ? "input-error" : ""}`}
             placeholder="25000"
             step="0.01"
             min="0"
           />
           {errors.price && (
             <div className="label">
-              <span className="label-text-alt text-error">{errors.price.message}</span>
+              <span className="label-text-alt text-error">
+                {errors.price.message}
+              </span>
             </div>
           )}
         </div>
@@ -212,7 +222,7 @@ export default function EditProductForm({ product }: ProductDetailsI) {
           </label>
           <select
             {...register("category")}
-            className={`select select-bordered w-full ${errors.category ? 'select-error' : ''}`}
+            className={`select select-bordered w-full ${errors.category ? "select-error" : ""}`}
           >
             <option disabled value="">
               Select Category
@@ -226,7 +236,9 @@ export default function EditProductForm({ product }: ProductDetailsI) {
           </select>
           {errors.category && (
             <div className="label">
-              <span className="label-text-alt text-error">{errors.category.message}</span>
+              <span className="label-text-alt text-error">
+                {errors.category.message}
+              </span>
             </div>
           )}
         </div>
@@ -239,7 +251,7 @@ export default function EditProductForm({ product }: ProductDetailsI) {
           >
             Cancel
           </button>
-          <button 
+          <button
             type="submit"
             className="btn btn-accent"
             disabled={isSubmitting}

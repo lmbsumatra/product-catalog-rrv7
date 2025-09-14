@@ -19,7 +19,6 @@ export function meta({}: Route.MetaArgs) {
 export async function action({ request, params }: ActionFunctionArgs) {
   const { slug } = params;
   if (!slug) {
-    console.log("Item not found");
     return { error: "Product not found" };
   }
 
@@ -83,13 +82,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
 export async function loader({ params }: Route.LoaderArgs) {
   const { slug } = params;
   if (!slug) {
-    console.log("Item not found");
     return;
   }
 
   const data = await GetProduct({ slug });
   if (!data) {
-    console.log("Item not found");
     return;
   }
   return { item: data };

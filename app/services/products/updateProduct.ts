@@ -1,28 +1,18 @@
 import { eq } from "drizzle-orm";
 import { db } from "~/db/config";
 import { products } from "~/db/models/Product";
+import type { Product } from "~/db/schemas";
 
-type GetProductI = {
+type UpdateProductI = {
   slug: string;
-  data: Partial<{
-    name: string;
-    description: string;
-    price: number;
-    imageUrl: string;
-    category: string;
-  }>;
+  data: Partial<Product>;
 }
 
-export default async function UpdateProduct({ slug, data }: GetProductI) {
-  const updateData = {
-    ...data,
-    price: data.price !== undefined ? String(data.price) : undefined,
-  };
-
-  const product = await db
+export default async function UpdateProduct({ slug, data }: UpdateProductI) {
+  const item = await db
     .update(products)
-    .set(updateData)
+    .set(data)
     .where(eq(products.slug, slug))
 
-  return product
+  return item;
 }
