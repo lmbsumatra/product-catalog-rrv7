@@ -19,18 +19,17 @@ export default async function DeleteProduct({ slug }: GetProductI) {
   if (!product) return null;
 
   if (product.imageUrl) {
-    try {
-      const imagePath = join(process.cwd(), "public", product.imageUrl.replace(/^\/+/, ""));
-      await unlink(imagePath);
-    } catch (error) {
+    const urlParts = product.imageUrl.split('/');
+    const filename = urlParts[urlParts.length - 1];
 
-    }
+    const imagePath = join(process.cwd(), "public", "assets", filename);
+    await unlink(imagePath);
+
   }
 
   await db
     .delete(products)
     .where(eq(products.slug, slug))
     .limit(1);
-
   return true;
 }

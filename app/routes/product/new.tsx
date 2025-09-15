@@ -4,7 +4,7 @@ import { redirect, type ActionFunctionArgs } from "react-router";
 import { join } from "path";
 import { writeFile, mkdir } from "fs/promises";
 import crypto from "crypto";
-import { AddProductFormSchema, AddProductSchema } from "~/db/schemas";
+import { AddProductSchema } from "~/db/schemas";
 import AddProduct from "~/services/products/addProduct";
 import { getUserId } from "~/utils/auth.server";
 
@@ -25,16 +25,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (data.price) {
     data.price = Number(data.price);
-  }
-
-  const formValidationResult = AddProductFormSchema.safeParse(data);
-
-  if (!formValidationResult.success) {
-    console.error("Form validation failed:", formValidationResult.error);
-    return {
-      error: "Form validation failed",
-      validationErrors: formValidationResult.error.flatten(),
-    };
   }
 
   const imageFile = formData.get("image") as File;
@@ -79,24 +69,24 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   const completeProductData = {
-    ...formValidationResult.data,
+    ...data,
     imageUrl,
   };
 
-  const finalValidationResult = AddProductSchema.safeParse(completeProductData);
+  const validationResult = AddProductSchema.safeParse(completeProductData);
 
-  if (!finalValidationResult.success) {
-    console.error("Final validation failed:", finalValidationResult.error);
+  if (!validationResult.success) {
+    console.error("Product validation failed:", validationResult.error);
     return {
       error: "Product validation failed",
-      validationErrors: finalValidationResult.error.flatten(),
+      validationErrors: validationResult.error.flatten(),
     };
   }
 
   try {
     const slug = await AddProduct({
       data: {
-        ...finalValidationResult.data,
+        ...validationResult.data,
         ownerId: ownerId ? Number(ownerId) : null,
       },
     });

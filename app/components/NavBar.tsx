@@ -59,6 +59,9 @@ export default function NavBar({ user }: NavBarProps) {
           <li>
             <NavLink to="/">Home</NavLink>
           </li>
+          <li>
+            <NavLink to="/products/all">Products</NavLink>
+          </li>
           {user ? (
             <li>
               <NavLink to="/products/new">Add Product</NavLink>

@@ -26,7 +26,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const data: Record<string, any> = {};
 
   formData.forEach((value, key) => {
-    if (key !== "image" && key !== "intent") {
+    if (key !== "image" && key !== "currentImageUrl") {
       data[key] = value;
     }
   });
@@ -45,6 +45,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const imageFile = formData.get("image") as File;
+  let hasNewImage = false;
+
   if (imageFile && imageFile.size > 0) {
     try {
       const fileExtension = imageFile.name.split(".").pop() || "jpg";
@@ -59,7 +61,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
       const buffer = Buffer.from(arrayBuffer);
       await writeFile(filePath, buffer);
 
-      validationResult.data.imageUrl = `/assets/${fileName}`;
+      validationResult.data.imageUrl = `http://localhost:5173/assets/${fileName}`;
+      hasNewImage = true;
+      console.log("New image saved:", fileName);
     } catch (error) {
       console.error("Error saving image:", error);
       return { 
@@ -69,7 +73,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   try {
-    await UpdateProduct({ slug, data: validationResult.data });
+    await UpdateProduct({ 
+      slug, 
+      data: validationResult.data, 
+      deleteOldImage: hasNewImage 
+    });
+    
     return redirect(`/products/${slug}`);
   } catch (error) {
     console.error("Error updating product:", error);

@@ -68,33 +68,30 @@ export default function EditProductForm({ product }: ProductDetailsI) {
 
   const onSubmit = async (data: UpdateProduct) => {
     const formData = new FormData();
-
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, value.toString());
-      }
-    });
-
+    
+    formData.append("name", data.name || "");
+    formData.append("description", data.description || "");
+    formData.append("price", data.price?.toString() || "");
+    formData.append("category", data.category || "");
+    
+    if (product.imageUrl) {
+      formData.append("currentImageUrl", product.imageUrl);
+    }
+    
     if (selectedFile) {
       formData.append("image", selectedFile);
     }
 
-    formData.append("intent", "update");
+    const response = await fetch(window.location.pathname, {
+      method: "POST",
+      body: formData,
+    });
 
-    const form = document.createElement("form");
-    form.method = "post";
-    form.encType = "multipart/form-data";
-
-    for (const [key, value] of formData.entries()) {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = key;
-      input.value = value as string;
-      form.appendChild(input);
+    if (response.ok) {
+      window.location.href = response.url || `/products/${product.slug}`;
+    } else {
+      alert("Something went wrong. Please try again.");
     }
-
-    document.body.appendChild(form);
-    form.submit();
   };
 
   return (

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { AddProductForm } from "~/db/schemas";
-import { AddProductFormSchema } from "~/db/schemas";
+import type { AddProduct } from "~/db/schemas";
+import { AddProductSchema } from "~/db/schemas";
 
 export default function AddProductForm() {
   const [preview, setPreview] = useState<string | null>();
@@ -13,46 +13,56 @@ export default function AddProductForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    clearErrors,
+    setError,
     formState: { errors, isSubmitting },
-  } = useForm<AddProductForm>({
-    resolver: zodResolver(AddProductFormSchema),
-    defaultValues: {
-      category: "",
-    },
+  } = useForm<AddProduct>({
+    resolver: zodResolver(AddProductSchema),
     mode: "onChange",
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log("Image selected:", file?.name, file?.size);
-    
-    if (file) {
-      setSelectedFile(file);
-      setImageError(""); 
-      const previewUrl = URL.createObjectURL(file);
-      setPreview(previewUrl);
 
-      return () => {
-        URL.revokeObjectURL(previewUrl);
-      };
+    if (file) {
+      const isValid = validateImageFile(file);
+
+      if (isValid) {
+        setSelectedFile(file);
+        setImageError("");
+        clearErrors("imageUrl");
+
+        setValue("imageUrl", "temp-image-url", { shouldValidate: true });
+
+        const previewUrl = URL.createObjectURL(file);
+        setPreview(previewUrl);
+
+        return () => {
+          URL.revokeObjectURL(previewUrl);
+        };
+      }
+    } else {
+      setSelectedFile(null);
+      setPreview(null);
+      setValue("imageUrl", "", { shouldValidate: true });
     }
   };
 
-  const validateImageFile = (): boolean => {
-    if (!selectedFile) {
-      setImageError("Image is required");
-      return false;
-    }
-
-    const maxSize = 5 * 1024 * 1024; 
-    if (selectedFile.size > maxSize) {
+  const validateImageFile = (file: File): boolean => {
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
       setImageError("Image size must be less than 5MB");
+      setError("imageUrl", { message: "Image size must be less than 5MB" });
       return false;
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedTypes.includes(selectedFile.type)) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
       setImageError("Only JPEG, PNG, WebP, and GIF images are allowed");
+      setError("imageUrl", {
+        message: "Only JPEG, PNG, WebP, and GIF images are allowed",
+      });
       return false;
     }
 
@@ -60,62 +70,29 @@ export default function AddProductForm() {
     return true;
   };
 
-  const onSubmit = async (data: AddProductForm) => {
-    console.log("Form submitted with data:", data);
-    
-    if (!validateImageFile()) {
+  const onSubmit = async (data: AddProduct) => {
+    if (!selectedFile) {
+      setImageError("Image is required");
+      setError("imageUrl", { message: "Image is required" });
       return;
     }
-
-    console.log("Selected file:", selectedFile?.name, selectedFile?.size);
 
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
+      if (key !== "imageUrl" && value !== undefined && value !== null) {
         formData.append(key, value.toString());
       }
     });
 
-    if (selectedFile) {
-      formData.append("image", selectedFile);
-      console.log("Image added to FormData:", selectedFile.name);
-    }
+    formData.append("image", selectedFile);
 
     formData.append("intent", "create");
 
-    try {
-      const response = await fetch(window.location.pathname, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        if (response.redirected || response.status === 302) {
-          window.location.href = response.url;
-        } else {
-          console.log("Product created successfully");
-          handleReset();
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Error creating product:", errorData);
-        
-        if (errorData.error) {
-          alert(errorData.error);
-        }
-      }
-    } catch (error) {
-      console.error("Network error:", error);
-      alert("Network error occurred. Please try again.");
-    }
-  };
-
-  const handleReset = () => {
-    reset();
-    setPreview(null);
-    setSelectedFile(null);
-    setImageError("");
+    await fetch(window.location.pathname, {
+      method: "POST",
+      body: formData,
+    });
   };
 
   return (
@@ -123,10 +100,10 @@ export default function AddProductForm() {
       <fieldset className="fieldset w-full md:w-1/2 flex flex-col items-center justify-center">
         <legend className="fieldset-legend">Image *</legend>
 
-        {imageError && (
+        {(imageError || errors.imageUrl) && (
           <div className="label">
             <span className="label-text-alt text-error">
-              {imageError}
+              {imageError || errors.imageUrl?.message}
             </span>
           </div>
         )}
@@ -134,7 +111,7 @@ export default function AddProductForm() {
         <label
           htmlFor="Pimage"
           className={`relative group w-full min-h-50 h-full border border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-base-200 transition-colors ${
-            imageError ? 'border-error' : 'border-base-300'
+            imageError || errors.imageUrl ? "border-error" : "border-base-300"
           }`}
         >
           {preview ? (
@@ -180,7 +157,8 @@ export default function AddProductForm() {
 
         {selectedFile && (
           <p className="text-xs text-base-content/70 mt-2 text-center">
-            Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+            Selected: {selectedFile.name} (
+            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
           </p>
         )}
       </fieldset>
@@ -275,13 +253,13 @@ export default function AddProductForm() {
         </div>
 
         <div className="flex gap-4 justify-end pt-4">
-          <button
+          {/* <button
             type="button"
             className="btn btn-outline btn-error"
-            onClick={handleReset}
+            onClick={reset}
           >
             Cancel
-          </button>
+          </button> */}
           <button
             type="submit"
             className="btn btn-accent"
