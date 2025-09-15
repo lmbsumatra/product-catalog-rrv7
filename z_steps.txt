@@ -7,3 +7,17 @@
 7. npm install react-hook-form @hookform/resolvers
 8. npm install jsonwebtokn bcryptjs
 9. npm i --save-dev @types/jsonwebtoken
+
+Take-Home Exam Instructions
+Build a simple Product Catalog website using these technologies:
+ReactRouter v7 Framework 
+Use all the basic features of React Router
+Use React Router as Backend don’t separate the service
+Tailwind CSS and DaisyUI for styling.
+Drizzle as ORM.
+MySQL as database.
+
+superadmin
+-> list all users
+-> block users
+-> allow to-> edit all products

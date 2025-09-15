@@ -4,13 +4,15 @@ import type { Product } from "~/db/schemas";
 
 type ProductDetailsI = {
   product: Product;
-  user?: { id: number; username: string } | null;
+  user?: { id: number; username: string, auth: string } | null;
 };
 
 export default function ProductDetails({ product, user }: ProductDetailsI) {
   const navigate = useNavigate();
 
   const isOwner = user && product.ownerId === user.id;
+  const isAdmin = user?.auth === "superadmin" 
+
 
   const handleBack = () => {
     navigate(-1);
@@ -90,7 +92,7 @@ export default function ProductDetails({ product, user }: ProductDetailsI) {
               </div>
 
               <div className="space-y-4">
-                {isOwner ? (
+                {(isOwner || isAdmin) ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       onClick={() =>

@@ -13,10 +13,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import {
-  getUserId,
-  createUserSession,
-} from "~/utils/auth.server";
+import { getUserId, createUserSession } from "~/utils/auth.server";
 import { LoginSchema, type LoginFormData } from "../../db/schemas/Auth";
 import { authenticateUser } from "~/utils/authenticateUser";
 
@@ -29,6 +26,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+
   const formData = await request.formData();
   const data: Record<string, any> = {};
 
@@ -45,17 +43,18 @@ export async function action({ request }: ActionFunctionArgs) {
   const { username, password, redirectTo } = validationResult.data;
 
   try {
-    const user = await authenticateUser(username, password);
-    if (!user) {
+    const authUser = await authenticateUser(username, password);
+    if (!authUser?.user) {
       return {
-        errors: { general: "Invalid username or password" },
+        errors: { general: authUser?.message ?? "Invalid username or password" },
         status: 400,
       };
     }
 
     return createUserSession(
-      user.id,
-      user.username,
+      authUser.user.id,
+      authUser.user.username,
+      authUser.user.auth,
       redirectTo || "/"
     );
   } catch (error) {

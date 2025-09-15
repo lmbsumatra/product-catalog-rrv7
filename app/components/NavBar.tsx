@@ -46,6 +46,13 @@ export default function NavBar({ user }: NavBarProps) {
             ) : (
               <></>
             )}
+            {user ? (
+              <li>
+                <NavLink to="/users">Users</NavLink>
+              </li>
+            ) : (
+              <></>
+            )}
           </ul>
         </div>
         <NavLink to="/" className="font-bold p-4">REINVENT</NavLink>
@@ -65,6 +72,13 @@ export default function NavBar({ user }: NavBarProps) {
           ) : (
             <></>
           )}
+          {user ? (
+              <li>
+                <NavLink to="/users">Users</NavLink>
+              </li>
+            ) : (
+              <></>
+            )}
         </ul>
       </div>
       <div className="navbar-end">

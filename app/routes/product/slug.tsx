@@ -31,7 +31,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   return {
     item: data,
-    user: rawUser ? { id: Number(rawUser.userId), username: rawUser.username } : undefined, 
+    user: rawUser ? { id: Number(rawUser.userId), username: rawUser.username, auth: rawUser.auth } : undefined, 
   };
 }
 

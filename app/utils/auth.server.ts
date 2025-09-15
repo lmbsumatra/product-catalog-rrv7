@@ -5,13 +5,13 @@ import { createCookieSessionStorage, redirect } from 'react-router';
 const JWT_SECRET = process.env.JWT_SECRET || 'jwt_secret';
 const COOKIE_SECRET = process.env.COOKIE_SECRET || 'cookie_secret';
 
-export function generateToken(payload: { userId: number; username: string }) {
+export function generateToken(payload: { userId: number; username: string, auth: string }) {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
 
-export function verifyToken(token: string): { userId: string; username: string } | null {
+export function verifyToken(token: string): { userId: string; username: string, auth: string } | null {
     try {
-        return jwt.verify(token, JWT_SECRET) as { userId: string; username: string };
+        return jwt.verify(token, JWT_SECRET) as { userId: string; username: string, auth: string };
     } catch {
         return null;
     }
@@ -24,7 +24,7 @@ const sessionStorage = createCookieSessionStorage({
         secrets: [COOKIE_SECRET],
         sameSite: 'lax',
         path: '/',
-        maxAge: 60 * 60 * 24 * 7, 
+        maxAge: 60 * 60 * 24 * 7,
         httpOnly: true,
     },
 });
@@ -64,9 +64,10 @@ export async function requireUserId(request: Request): Promise<string> {
 export async function createUserSession(
     userId: number,
     username: string,
+    auth: string,
     redirectTo: string = '/'
 ) {
-    const token = generateToken({ userId, username });
+    const token = generateToken({ userId, username, auth });
     const session = await sessionStorage.getSession();
     session.set('token', token);
 
