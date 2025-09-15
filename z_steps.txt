@@ -6,20 +6,5 @@
 5. npm install -D drizzle-kit
 6. npm install zod
 7. npm install react-hook-form @hookform/resolvers
-
-
-id
-name
-slug
-description
-price
-imageUrl
-category
-createdAt
-updatedAt
-ownerId
-
-
-id
-username
-password
+8. npm install jsonwebtokn bcryptjs
+9. npm i --save-dev @types/jsonwebtoken

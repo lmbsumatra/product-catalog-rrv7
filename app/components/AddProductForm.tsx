@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { AddProduct } from "~/db/schemas";
-import { AddProductSchema } from "~/db/schemas";
+import type { AddProductForm } from "~/db/schemas";
+import { AddProductFormSchema } from "~/db/schemas";
 
 export default function AddProductForm() {
   const [preview, setPreview] = useState<string | null>();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string>("");
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<AddProduct>({
-    resolver: zodResolver(AddProductSchema),
+  } = useForm<AddProductForm>({
+    resolver: zodResolver(AddProductFormSchema),
     defaultValues: {
       category: "",
     },
@@ -24,12 +24,13 @@ export default function AddProductForm() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log("Image selected:", file?.name, file?.size);
+    
     if (file) {
       setSelectedFile(file);
+      setImageError(""); 
       const previewUrl = URL.createObjectURL(file);
       setPreview(previewUrl);
-
-      setValue("imageUrl", previewUrl, { shouldValidate: true });
 
       return () => {
         URL.revokeObjectURL(previewUrl);
@@ -37,7 +38,37 @@ export default function AddProductForm() {
     }
   };
 
-  const onSubmit = async (data: AddProduct) => {
+  const validateImageFile = (): boolean => {
+    if (!selectedFile) {
+      setImageError("Image is required");
+      return false;
+    }
+
+    const maxSize = 5 * 1024 * 1024; 
+    if (selectedFile.size > maxSize) {
+      setImageError("Image size must be less than 5MB");
+      return false;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(selectedFile.type)) {
+      setImageError("Only JPEG, PNG, WebP, and GIF images are allowed");
+      return false;
+    }
+
+    setImageError("");
+    return true;
+  };
+
+  const onSubmit = async (data: AddProductForm) => {
+    console.log("Form submitted with data:", data);
+    
+    if (!validateImageFile()) {
+      return;
+    }
+
+    console.log("Selected file:", selectedFile?.name, selectedFile?.size);
+
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
@@ -48,42 +79,63 @@ export default function AddProductForm() {
 
     if (selectedFile) {
       formData.append("image", selectedFile);
+      console.log("Image added to FormData:", selectedFile.name);
     }
 
-    formData.append("intent", "update");
+    formData.append("intent", "create");
 
-    const form = document.createElement("form");
-    form.method = "post";
-    form.encType = "multipart/form-data";
+    try {
+      const response = await fetch(window.location.pathname, {
+        method: "POST",
+        body: formData,
+      });
 
-    for (const [key, value] of formData.entries()) {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = key;
-      input.value = value as string;
-      form.appendChild(input);
+      if (response.ok) {
+        if (response.redirected || response.status === 302) {
+          window.location.href = response.url;
+        } else {
+          console.log("Product created successfully");
+          handleReset();
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error creating product:", errorData);
+        
+        if (errorData.error) {
+          alert(errorData.error);
+        }
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Network error occurred. Please try again.");
     }
+  };
 
-    document.body.appendChild(form);
-    form.submit();
+  const handleReset = () => {
+    reset();
+    setPreview(null);
+    setSelectedFile(null);
+    setImageError("");
   };
 
   return (
     <div className="p-5 shadow-md rounded w-full max-w-2xl mx-auto flex flex-col md:flex-row gap-6 justify-center items-stretch">
       <fieldset className="fieldset w-full md:w-1/2 flex flex-col items-center justify-center">
-        <legend className="fieldset-legend">Image</legend>
+        <legend className="fieldset-legend">Image *</legend>
 
-        {errors.imageUrl && (
+        {imageError && (
           <div className="label">
             <span className="label-text-alt text-error">
-              {errors.imageUrl.message}
+              {imageError}
             </span>
           </div>
         )}
 
         <label
-          htmlFor="product-image"
-          className="relative group w-full min-h-50 h-full border border-dashed border-base-300 rounded flex items-center justify-center cursor-pointer hover:bg-base-200 transition-colors"
+          htmlFor="Pimage"
+          className={`relative group w-full min-h-50 h-full border border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-base-200 transition-colors ${
+            imageError ? 'border-error' : 'border-base-300'
+          }`}
         >
           {preview ? (
             <>
@@ -119,16 +171,16 @@ export default function AddProductForm() {
         </label>
 
         <input
-          id="product-image"
+          id="Pimage"
           type="file"
           className="hidden"
           accept="image/*"
-          onChange={handleImageChange}
+          onChange={(e) => handleImageChange(e)}
         />
 
         {selectedFile && (
           <p className="text-xs text-base-content/70 mt-2 text-center">
-            Selected: {selectedFile.name}
+            Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
           </p>
         )}
       </fieldset>
@@ -158,7 +210,7 @@ export default function AddProductForm() {
 
         <div>
           <label className="label">
-            <span className="label-text">Description</span>
+            <span className="label-text">Description *</span>
           </label>
           <textarea
             {...register("description")}
@@ -226,7 +278,7 @@ export default function AddProductForm() {
           <button
             type="button"
             className="btn btn-outline btn-error"
-            onClick={() => reset()}
+            onClick={handleReset}
           >
             Cancel
           </button>

@@ -6,7 +6,6 @@ type ProductI = {
 };
 
 export default function ProductCard({ product }: ProductI) {
-  
   return (
     <Link to={`/products/${product.slug}`}>
       <div className="card bg-base-100 w-75 shadow-sm h-100">
@@ -26,9 +25,13 @@ export default function ProductCard({ product }: ProductI) {
         <div className="card-body">
           <h2 className="card-title">{product.name}</h2>
           <p>{product.description}</p>
-          <a href={`/products/${product.slug}`}>{product.slug}</a>
           <div className="card-actions justify-end">
-            <button className="btn btn-primary" onClick={()=> redirect(`/produts/${product.slug}`)}>Buy Now</button>
+            <button
+              className="btn btn-primary"
+              onClick={() => redirect(`/produts/${product.slug}`)}
+            >
+              Buy Now
+            </button>
           </div>
         </div>
       </div>

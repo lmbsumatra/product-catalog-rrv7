@@ -4,8 +4,9 @@ import { redirect, type ActionFunctionArgs } from "react-router";
 import { join } from "path";
 import { writeFile, mkdir } from "fs/promises";
 import crypto from "crypto";
-import { AddProductSchema } from "~/db/schemas";
+import { AddProductFormSchema, AddProductSchema } from "~/db/schemas";
 import AddProduct from "~/services/products/addProduct";
+import { getUserId } from "~/utils/auth.server";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "New Product | RRv7" }];
@@ -14,6 +15,7 @@ export function meta({}: Route.MetaArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const data: Record<string, any> = {};
+  const ownerId = await getUserId(request);
 
   formData.forEach((value, key) => {
     if (key !== "image" && key !== "intent") {
@@ -25,45 +27,89 @@ export async function action({ request }: ActionFunctionArgs) {
     data.price = Number(data.price);
   }
 
-  const validationResult = AddProductSchema.safeParse(data);
+  const formValidationResult = AddProductFormSchema.safeParse(data);
 
-  if (!validationResult.success) {
+  if (!formValidationResult.success) {
+    console.error("Form validation failed:", formValidationResult.error);
     return {
-      error: "Validation failed on server",
+      error: "Form validation failed",
+      validationErrors: formValidationResult.error.flatten(),
     };
   }
 
   const imageFile = formData.get("image") as File;
-  if (imageFile && imageFile.size > 0) {
-    try {
-      const fileExtension = imageFile.name.split(".").pop() || "jpg";
-      const uniqueId = crypto.randomBytes(16).toString("hex");
-      const fileName = `${uniqueId}.${fileExtension}`;
+  console.log("Image file received:", imageFile?.name, imageFile?.size);
 
-      const assetsDir = join(process.cwd(), "public", "assets");
-      await mkdir(assetsDir, { recursive: true });
+  if (!imageFile || imageFile.size === 0) {
+    return {
+      error: "Image file is required",
+    };
+  }
 
-      const filePath = join(assetsDir, fileName);
-      const arrayBuffer = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      await writeFile(filePath, buffer);
+  let imageUrl: string;
 
-      validationResult.data.imageUrl = `/assets/${fileName}`;
-    } catch (error) {
-      console.error("Error saving image:", error);
-      return {
-        error: "Failed to save image",
-      };
-    }
+  try {
+    const fileExtension = imageFile.name.split(".").pop() || "jpg";
+    const uniqueId = crypto.randomBytes(16).toString("hex");
+    const fileName = `${uniqueId}.${fileExtension}`;
+
+    const assetsDir = join(process.cwd(), "public", "assets");
+    console.log("Assets directory path:", assetsDir);
+    
+    await mkdir(assetsDir, { recursive: true });
+
+    const filePath = join(assetsDir, fileName);
+    console.log("Full file path:", filePath);
+    
+    const arrayBuffer = await imageFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    await writeFile(filePath, buffer);
+    console.log("Image saved successfully:", fileName);
+
+    imageUrl = `http://localhost:5173/assets/${fileName}`;
+    console.log("Generated imageUrl:", imageUrl);
+    
+  } catch (error) {
+    console.error("Error saving image:", error);
+    return {
+      error: "Failed to save image",
+      details: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+
+  const completeProductData = {
+    ...formValidationResult.data,
+    imageUrl,
+  };
+
+  const finalValidationResult = AddProductSchema.safeParse(completeProductData);
+
+  if (!finalValidationResult.success) {
+    console.error("Final validation failed:", finalValidationResult.error);
+    return {
+      error: "Product validation failed",
+      validationErrors: finalValidationResult.error.flatten(),
+    };
   }
 
   try {
-    const slug = await AddProduct({ data: validationResult.data });
-    return redirect(`/products/${slug}`);
+    const slug = await AddProduct({
+      data: {
+        ...finalValidationResult.data,
+        ownerId: ownerId ? Number(ownerId) : null,
+      },
+    });
+    
+    console.log("Product created successfully with slug:", slug);
+    
+    return redirect(`/products/${slug || 'success'}`);
+    
   } catch (error) {
-    console.error("Error updating product:", error);
+    console.error("Error creating product:", error);
     return {
-      error: "Failed to update product",
+      error: "Failed to create product",
+      details: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

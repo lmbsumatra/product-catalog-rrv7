@@ -6,7 +6,7 @@ type GetProductI = {
   slug: string;
 }
 
-export default async function GetProduct({ slug }: GetProductI) {
+export default async function GetProductBySlug({ slug }: GetProductI) {
   const item = await db
     .select()
     .from(products)

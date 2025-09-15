@@ -13,6 +13,23 @@ export const ProductSchema = z.object({
   updatedAt: z.coerce.date().optional(),
 });
 
+// Schema for form validation (before image processing)
+export const AddProductFormSchema = ProductSchema.pick({
+  name: true,
+  description: true,
+  price: true,
+  category: true,
+}).extend({
+  // Make imageUrl optional for form validation, but we'll validate file presence separately
+  imageUrl: z.string().optional(),
+}).required({
+  name: true,
+  description: true,
+  price: true,
+  category: true,
+});
+
+// Schema for final validation (after image processing)
 export const AddProductSchema = ProductSchema.pick({
   name: true,
   description: true,
@@ -31,4 +48,5 @@ export const UpdateProductSchema = ProductSchema.pick({
 
 export type Product = z.infer<typeof ProductSchema>;
 export type AddProduct = z.infer<typeof AddProductSchema>;
+export type AddProductForm = z.infer<typeof AddProductFormSchema>;
 export type UpdateProduct = z.infer<typeof UpdateProductSchema>;

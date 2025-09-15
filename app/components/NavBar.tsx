@@ -1,6 +1,14 @@
+import { Form } from "react-router";
 import { NavLink } from "react-router";
 
-export default function NavBar() {
+type NavBarProps = {
+  user?: {
+    userId: string;
+    username: string;
+  } | null;
+};
+
+export default function NavBar({ user }: NavBarProps) {
   return (
     <div className="navbar bg-base-100 shadow-sm mb-4">
       <div className="navbar-start">
@@ -51,14 +59,41 @@ export default function NavBar() {
           <li>
             <NavLink to="/">Home</NavLink>
           </li>
-          <li>
-            <NavLink to="/products/new">Add Product</NavLink>
-          </li>
-          <li>{/* <NavLink>Manage</NavLink> */}</li>
+          {user ? (
+            <li>
+              <NavLink to="/products/new">Add Product</NavLink>
+            </li>
+          ) : (
+            <></>
+          )}
         </ul>
       </div>
       <div className="navbar-end">
-        <a className="btn">Button</a>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-sm font-medium hidden sm:inline">
+                  Welcome, {user.username}
+                </span>
+              </div>
+              <Form method="post" action="/logout">
+                <button type="submit" className="btn">
+                  Logout
+                </button>
+              </Form>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" className="btn btn-ghost">
+                Login
+              </NavLink>
+              <NavLink to="/register" className="btn btn-primary">
+                Register
+              </NavLink>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

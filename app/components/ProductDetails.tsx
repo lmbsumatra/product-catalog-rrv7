@@ -4,12 +4,13 @@ import type { Product } from "~/db/schemas";
 
 type ProductDetailsI = {
   product: Product;
+  user?: { id: number; username: string } | null;
 };
 
-export default function ProductDetails({ product }: ProductDetailsI) {
+export default function ProductDetails({ product, user }: ProductDetailsI) {
   const navigate = useNavigate();
 
-  const [isOwner] = useState(true);
+  const isOwner = user && product.ownerId === user.id;
 
   const handleBack = () => {
     navigate(-1);

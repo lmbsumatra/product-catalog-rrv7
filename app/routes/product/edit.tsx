@@ -1,4 +1,4 @@
-import GetProduct from "~/services/products/getProduct";
+import GetProductBySlug from "~/services/products/getProductBySlug";
 import type { Route } from "./+types/edit";
 import EditProductForm from "~/components/EditProductForm";
 import { redirect, type ActionFunctionArgs } from "react-router";
@@ -9,7 +9,7 @@ import crypto from "crypto";
 import { UpdateProductSchema } from "~/db/schemas"; 
 
 type LoaderData = {
-  item: Awaited<ReturnType<typeof GetProduct>>;
+  item: Awaited<ReturnType<typeof GetProductBySlug>>;
 };
 
 export function meta({}: Route.MetaArgs) {
@@ -85,7 +85,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     return;
   }
 
-  const data = await GetProduct({ slug });
+  const data = await GetProductBySlug({ slug });
   if (!data) {
     return;
   }
