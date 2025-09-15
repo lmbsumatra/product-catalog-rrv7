@@ -25,10 +25,8 @@ export default async function DeleteProduct({ slug }: GetProductI) {
 
     try {
       await unlink(imagePath);
-      console.log(`Successfully deleted image: ${filename}`);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-        console.warn(`Image file not found, skipping deletion: ${filename}`);
       } else {
         throw error;
       }

@@ -24,7 +24,7 @@ export default function ProductDetails({ product, user }: ProductDetailsI) {
             <a href="/">Home</a>
           </li>
           <li>
-            <a href="/products">Products</a>
+            <a href="/products/all">Products</a>
           </li>
           <li className="text-base-content/70">{product.name}</li>
         </ul>

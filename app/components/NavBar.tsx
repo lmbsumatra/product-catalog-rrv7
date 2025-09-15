@@ -48,7 +48,7 @@ export default function NavBar({ user }: NavBarProps) {
             )}
           </ul>
         </div>
-        <a className="btn btn-ghost text-xl">REINVENT</a>
+        <NavLink to="/" className="font-bold p-4">REINVENT</NavLink>
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
