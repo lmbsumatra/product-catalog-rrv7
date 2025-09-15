@@ -21,15 +21,24 @@ export default async function DeleteProduct({ slug }: GetProductI) {
   if (product.imageUrl) {
     const urlParts = product.imageUrl.split('/');
     const filename = urlParts[urlParts.length - 1];
-
     const imagePath = join(process.cwd(), "public", "assets", filename);
-    await unlink(imagePath);
 
+    try {
+      await unlink(imagePath);
+      console.log(`Successfully deleted image: ${filename}`);
+    } catch (error) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+        console.warn(`Image file not found, skipping deletion: ${filename}`);
+      } else {
+        throw error;
+      }
+    }
   }
 
   await db
     .delete(products)
     .where(eq(products.slug, slug))
     .limit(1);
+
   return true;
 }

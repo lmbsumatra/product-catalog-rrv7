@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { AddProduct } from "~/db/schemas";
 import { AddProductSchema } from "~/db/schemas";
+import { useSubmit } from "react-router";
 
 export default function AddProductForm() {
   const [preview, setPreview] = useState<string | null>();
@@ -70,6 +71,8 @@ export default function AddProductForm() {
     return true;
   };
 
+  const submit = useSubmit();
+
   const onSubmit = async (data: AddProduct) => {
     if (!selectedFile) {
       setImageError("Image is required");
@@ -89,9 +92,9 @@ export default function AddProductForm() {
 
     formData.append("intent", "create");
 
-    await fetch(window.location.pathname, {
+    submit(formData, {
       method: "POST",
-      body: formData,
+      encType: "multipart/form-data",
     });
   };
 

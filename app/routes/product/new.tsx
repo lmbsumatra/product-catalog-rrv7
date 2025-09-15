@@ -93,7 +93,7 @@ export async function action({ request }: ActionFunctionArgs) {
     
     console.log("Product created successfully with slug:", slug);
     
-    return redirect(`/products/${slug || 'success'}`);
+    return redirect(`/products/${slug}`);
     
   } catch (error) {
     console.error("Error creating product:", error);
