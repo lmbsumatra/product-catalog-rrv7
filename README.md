@@ -1,87 +1,92 @@
-# Welcome to React Router!
-
-A modern, production-ready template for building full-stack React applications using React Router.
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+# Product Catalog - React Router v7 
 
 ## Features
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+### Core Functionality
+- **Product Management**: Create, read, update, and delete products
+- **User Authentication**: JWT-based authentication with registration and login
+- **Role-Based Access Control**: Admin, and SuperAdmin roles with different permissions
+- **Responsive Design**: Tailwind CSS and DaisyUI
+- **Search & Filter**: Product search with sorting capabilities
 
-## Getting Started
+### User Roles & Permissions
 
-### Installation
+#### Regular Users
+- Browse and search products
+- Create, edit, and delete their own products
+- View product details
+- User profile management
 
-Install the dependencies:
+#### SuperAdmin
+- All user permissions
+- Block/unblock user accounts
+- Edit and delete any product regardless of ownership
+- Access to user management dashboard
+- View all users and their status
 
-```bash
-npm install
-```
+### Authentication & Security
+- Password hashing with bcrypt
+- JWT tokens stored in secure HTTP-only cookies
+- Server-side validation for all operations
+- File upload validation (size, type, security)
+- Role-based route protection
+- CSRF protection
 
-### Development
+## Tech Stack
 
-Start the development server with HMR:
+### Frontend
+- **React Router v7** - Full-stack React framework
+- **TypeScript** - Type safety throughout the application
+- **Tailwind CSS** - Utility-first CSS framework
+- **DaisyUI** - Component library for Tailwind
+- **React Hook Form** - Form management and validation
+- **Zod** - Schema validation
 
-```bash
-npm run dev
-```
+### Backend
+- **React Router v7** - Server-side rendering and API routes
+- **MySQL** - Primary database
+- **Drizzle ORM** - Type-safe database queries
+- **JWT** - Authentication tokens
+- **Bcrypt** - Password hashing
 
-Your application will be available at `http://localhost:5173`.
+## Installation & Setup
 
-## Building for Production
+### Installation Steps
 
-Create a production build:
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd product-catalog
+   ```
 
-```bash
-npm run build
-```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Deployment
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-### Docker Deployment
+## Usage Examples
 
-To build and run using Docker:
+### Creating a Product
+1. Register/login as a user
+2. Navigate to "Add Product" 
+3. Fill in product details and upload an image
+4. Submit the form
+5. Get redirected to the new product page
 
-```bash
-docker build -t my-app .
+### SuperAdmin Functions
+1. Login with superadmin credentials
+2. Access `/admin/users` for user management
+3. Block/unblock users as needed
+4. Edit or delete any product through admin interface
 
-# Run the container
-docker run -p 3000:3000 my-app
-```
+### Search and Filter
+1. Go to the products page
+2. Use the search bar to find products by name, description, or category
+3. Sort by name, price, or category
+4. Toggle ascending/descending order
 
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
